@@ -1,29 +1,28 @@
 import { FaEarlybirds, FaSearch, FaHome } from "react-icons/fa";
 import { SlSettings } from "react-icons/sl";
-import { BsThreeDots } from "react-icons/bs";
+
 import { TweetBtn } from "../components/TweetBtn";
 import { TweetCard } from "../components/TweetCard";
-import flowerIcon from "../assets/flowerIcon.png";
-import { Link } from "react-router-dom";
+
+import { Link, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { UsersContext } from "../RootLayout";
 import { ProfileHeader } from "../components/ProfileHeader";
-
-const TWEETS = [
-  {
-    avatarSrc: flowerIcon,
-    username: "Griffin",
-    atName: "BobbyJones",
-    description:
-      "Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum Lorem Ipsum",
-    replies: 0,
-    retweets: 2,
-    likes: 3,
-  },
-];
+import { TweetForm } from "../components/TweetForm";
 
 export function Home() {
-  const { isSignedIn } = useContext(UsersContext);
+  const { isSignedIn, showTweetForm, setShowTweetForm, tweets } =
+    useContext(UsersContext);
+
+  const navigate = useNavigate();
+
+  function handleNotSignedInTweetClick() {
+    navigate("/signin");
+  }
+
+  function handleSignedInTweetClick() {
+    setShowTweetForm(true);
+  }
 
   return (
     <>
@@ -45,7 +44,10 @@ export function Home() {
               <FaSearch className='text-3xl ' />
               <span className='text-2xl font-medium '>Explore</span>
             </div>
-            <div className='flex justify-center items-center'>
+            <div
+              className='flex justify-center items-center'
+              onClick={handleSignedInTweetClick}
+            >
               <TweetBtn />
             </div>
             <ProfileHeader />
@@ -58,7 +60,7 @@ export function Home() {
               </div>
             </div>
             <div className=' pb-4'>
-              {TWEETS.map((tweet, idx) => {
+              {tweets.map((tweet, idx) => {
                 return (
                   <TweetCard
                     key={idx}
@@ -89,6 +91,11 @@ export function Home() {
               <div className='w-full'>{/* Add some articles */}</div>
             </div>
           </div>
+          {isSignedIn && showTweetForm && (
+            <div className='flex items-start justify-start fixed top-20 left-[450px]'>
+              <TweetForm />
+            </div>
+          )}
         </div>
       ) : (
         <div className='flex'>
@@ -104,7 +111,10 @@ export function Home() {
               <FaSearch className='text-3xl ' />
               <span className='text-2xl font-medium '>Explore</span>
             </div>
-            <div className='flex justify-center items-center'>
+            <div
+              className='flex justify-center items-center'
+              onClick={handleNotSignedInTweetClick}
+            >
               <TweetBtn />
             </div>
           </div>
@@ -116,7 +126,7 @@ export function Home() {
               </div>
             </div>
             <div className=' pb-4'>
-              {TWEETS.map((tweet, idx) => {
+              {tweets.map((tweet, idx) => {
                 return (
                   <TweetCard
                     key={idx}
