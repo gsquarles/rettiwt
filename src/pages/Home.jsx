@@ -1,20 +1,34 @@
 import { FaEarlybirds, FaSearch, FaHome } from "react-icons/fa";
 import { SlSettings } from "react-icons/sl";
-
 import { TweetBtn } from "../components/TweetBtn";
 import { TweetCard } from "../components/TweetCard";
-
 import { Link, useNavigate } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { UsersContext } from "../RootLayout";
 import { ProfileHeader } from "../components/ProfileHeader";
 import { TweetForm } from "../components/TweetForm";
+import { db } from "../firebase";
+import { collection, query, onSnapshot, orderBy } from "firebase/firestore";
 
 export function Home() {
-  const { isSignedIn, showTweetForm, setShowTweetForm, tweets } =
+  const { isSignedIn, showTweetForm, setShowTweetForm } =
     useContext(UsersContext);
-
+  const [tweets, setTweets] = useState([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const tweetsCollectionRef = collection(db, "tweets");
+    const q = query(tweetsCollectionRef, orderBy("timestamp"));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const updatedTweets = [];
+      snapshot.forEach((doc) => {
+        updatedTweets.push(doc.data());
+      });
+      setTweets(updatedTweets.reverse());
+    });
+    return () => unsubscribe();
+  }, []);
 
   function handleNotSignedInTweetClick() {
     navigate("/signin");
@@ -61,18 +75,7 @@ export function Home() {
             </div>
             <div className=' pb-4'>
               {tweets.map((tweet, idx) => {
-                return (
-                  <TweetCard
-                    key={idx}
-                    avatarSrc={tweet.avatarSrc}
-                    username={tweet.username}
-                    atName={tweet.atName}
-                    description={tweet.description}
-                    replies={tweet.replies}
-                    retweets={tweet.retweets}
-                    likes={tweet.likes}
-                  />
-                );
+                return <TweetCard key={idx} {...tweet} />;
               })}
             </div>
           </main>
@@ -127,18 +130,7 @@ export function Home() {
             </div>
             <div className=' pb-4'>
               {tweets.map((tweet, idx) => {
-                return (
-                  <TweetCard
-                    key={idx}
-                    avatarSrc={tweet.avatarSrc}
-                    username={tweet.username}
-                    atName={tweet.atName}
-                    description={tweet.description}
-                    replies={tweet.replies}
-                    retweets={tweet.retweets}
-                    likes={tweet.likes}
-                  />
-                );
+                return <TweetCard key={idx} {...tweet} />;
               })}
             </div>
           </main>

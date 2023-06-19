@@ -3,6 +3,8 @@ import { UsersContext } from "../RootLayout";
 import { useContext } from "react";
 import defaultIcon from "../assets/flowerIcon.png";
 import { Link, useNavigate } from "react-router-dom";
+import { db } from "../firebase";
+import { addDoc, collection } from "firebase/firestore";
 
 export function SignUpForm() {
   const { setUsers, setIsSignedIn, setMyProfile } = useContext(UsersContext);
@@ -15,8 +17,42 @@ export function SignUpForm() {
 
   const navigate = useNavigate();
 
+  const validateAtName = (value) => {
+    if (/\s/.test(value)) {
+      return "Spaces are not allowed";
+    }
+    if (value.length < 3 || value.length > 15) {
+      return "Must be between 3 and 12 characters";
+    }
+
+    return true;
+  };
+
+  const validateUsername = (value) => {
+    if (value.length < 2 || value.length > 15) {
+      return "Must be between 3 and 12 characters";
+    }
+
+    return true;
+  };
+
+  const validateEmail = (value) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      return "Invalid email format";
+    }
+    return true;
+  };
+
+  const validatePassword = (value) => {
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d).+$/;
+    if (!passwordRegex.test(value)) {
+      return "Password must contain at least one capital letter and one number";
+    }
+    return true;
+  };
+
   function onSubmit(data) {
-    console.log(data);
     const user = {
       profilePic: data.profilePic[0]
         ? URL.createObjectURL(data.profilePic[0])
@@ -25,13 +61,22 @@ export function SignUpForm() {
       username: data.username,
       email: data.email,
       password: data.password,
+      myTweets: [],
     };
 
-    setUsers((prevUsers) => [...prevUsers, user]);
-    setIsSignedIn(true);
-    setMyProfile(user);
-
-    navigate("/");
+    //Add user to the Firestore collection
+    addDoc(collection(db, "users"), user)
+      .then(() => {
+        //Document added successfully
+        setUsers((prevUsers) => [...prevUsers, user]);
+        setIsSignedIn(true);
+        setMyProfile(user);
+        navigate("/");
+      })
+      .catch((error) => {
+        //Error occured while adding the document
+        console.error("Error adding document: ", error);
+      });
   }
 
   return (
@@ -59,7 +104,11 @@ export function SignUpForm() {
 
             <input
               {...register("atName", {
-                required: { value: true, message: "Required" },
+                required: {
+                  value: true,
+                  message: "Required",
+                },
+                validate: validateAtName,
               })}
               type='text'
               id='atName'
@@ -70,7 +119,7 @@ export function SignUpForm() {
               } focus:border-primary focus:outline-none `}
             />
             {isSubmitted && errors.atName && (
-              <span className='text-red-500'>Required</span>
+              <span className='text-red-500'>{errors.atName.message}</span>
             )}
             <label htmlFor='username' className=' self-start'>
               Username
@@ -79,35 +128,38 @@ export function SignUpForm() {
             <input
               {...register("username", {
                 required: { value: true, message: "Required" },
+                validate: validateUsername,
               })}
               type='text'
               id='username'
               className={`bg-gray-200 w-full py-4 px-3 text-xl  border-b-2   ${
-                isSubmitted && errors.atName
+                isSubmitted && errors.username
                   ? "border-red-500"
                   : "border-gray-900"
               } focus:border-primary focus:outline-none `}
             />
+
+            {isSubmitted && errors.email && (
+              <span className='text-red-500'>{errors.username.message}</span>
+            )}
             <label htmlFor='email' className=' self-start'>
               Email
             </label>
-            {isSubmitted && errors.email && (
-              <span className='text-red-500'>Required</span>
-            )}
             <input
               {...register("email", {
                 required: { value: true, message: "Required" },
+                validate: validateEmail,
               })}
               type='email'
               id='email'
               className={`bg-gray-200 w-full py-4 px-3 text-xl  border-b-2   ${
-                isSubmitted && errors.atName
+                isSubmitted && errors.email
                   ? "border-red-500"
                   : "border-gray-900"
               } focus:border-primary focus:outline-none `}
             />
             {isSubmitted && errors.username && (
-              <span className='text-red-500'>Required</span>
+              <span className='text-red-500'>{errors.email.message}</span>
             )}
             <label htmlFor='password' className=' self-start'>
               Password
@@ -116,17 +168,18 @@ export function SignUpForm() {
             <input
               {...register("password", {
                 required: { value: true, message: "Required" },
+                validate: validatePassword,
               })}
               type='password'
               id='password'
               className={`bg-gray-200 w-full py-4 px-3 text-xl  border-b-2   ${
-                isSubmitted && errors.atName
+                isSubmitted && errors.password
                   ? "border-red-500"
                   : "border-gray-900"
               } focus:border-primary focus:outline-none `}
             />
             {isSubmitted && errors.password && (
-              <span className='text-red-500'>Required</span>
+              <span className='text-red-500'>{errors.password.message}</span>
             )}
             <div className='flex flex-col items-center mt-3'>
               {/* Make this p element into a link to the Sign-In page */}

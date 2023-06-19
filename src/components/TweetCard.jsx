@@ -9,7 +9,25 @@ export function TweetCard({
   replies,
   retweets,
   likes,
+  timestamp,
 }) {
+  const tweetDate = timestamp.toDate();
+  const currentDate = new Date();
+
+  let formattedDate;
+  if (
+    tweetDate.getFullYear() === currentDate.getFullYear() &&
+    tweetDate.getMonth() === currentDate.getMonth()
+  ) {
+    formattedDate = tweetDate.toLocaleDateString(undefined, {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } else {
+    formattedDate = tweetDate.toLocaleDateString();
+  }
+
   return (
     <div className='flex px-3 py-3 gap-2 border-b-2 border-gray-300'>
       <div className='w-10 h-10 flex-shrink-0 '>
@@ -20,7 +38,7 @@ export function TweetCard({
         <div>
           <span className='text-lg font-semibold'>{username} </span>
           <span className=' text-gray-500'>@{atName} </span>
-          <span className=' text-gray-500'>Sat Jun 7 2023</span>
+          <span className=' text-gray-500'>{formattedDate}</span>
         </div>
         <p className='flex-shrink-0'>{description}</p>
         <div className='flex gap-28 items-center mt-4 '>

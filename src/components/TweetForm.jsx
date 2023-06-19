@@ -2,9 +2,19 @@ import { useContext } from "react";
 import { HiX } from "react-icons/hi";
 import { UsersContext } from "../RootLayout";
 import { useForm } from "react-hook-form";
+import { db } from "../firebase";
+import {
+  Timestamp,
+  addDoc,
+  collection,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 
 export function TweetForm() {
-  const { myProfile, setShowTweetForm, setTweets } = useContext(UsersContext);
+  const { myProfile, setShowTweetForm } = useContext(UsersContext);
 
   const { register, handleSubmit } = useForm();
 
@@ -13,7 +23,7 @@ export function TweetForm() {
     event.target.style.height = event.target.scrollHeight + "px";
   };
 
-  function onSubmit(data) {
+  async function onSubmit(data) {
     const newTweet = {
       avatarSrc: myProfile.profilePic,
       username: myProfile.username,
@@ -22,9 +32,28 @@ export function TweetForm() {
       replies: 0,
       retweets: 0,
       likes: 0,
+      timestamp: Timestamp.fromDate(new Date()),
     };
 
-    setTweets((prevTweets) => [newTweet, ...prevTweets]);
+    try {
+      const docRef = await addDoc(collection(db, "tweets"), newTweet);
+      console.log("Document written with ID: ", docRef.id);
+
+      const querySnapshot = await getDocs(
+        query(
+          collection(db, "users"),
+          where("username", "==", myProfile.username)
+        )
+      );
+      querySnapshot.forEach((doc) => {
+        updateDoc(doc.ref, {
+          myTweets: [...doc.data().myTweets, newTweet],
+        });
+      });
+    } catch (error) {
+      console.error("Error adding document: ", error);
+    }
+
     setShowTweetForm(false);
   }
 

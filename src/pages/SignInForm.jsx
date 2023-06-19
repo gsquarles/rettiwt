@@ -1,33 +1,53 @@
 import { useForm } from "react-hook-form";
 import { UsersContext } from "../RootLayout";
 import { useContext } from "react";
-
 import { Link, useNavigate } from "react-router-dom";
+import { db } from "../firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 export function SignInForm() {
-  const { users, setIsSignedIn, setMyProfile } = useContext(UsersContext);
+  const { setIsSignedIn, setMyProfile } = useContext(UsersContext);
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitted },
   } = useForm();
 
   const navigate = useNavigate();
 
-  function onSubmit(data) {
+  async function onSubmit(data) {
     const user = {
       email: data.email,
       password: data.password,
     };
-    const foundUser = users.find((u) => u.email === user.email);
 
-    if (foundUser && foundUser.password === user.password) {
-      setIsSignedIn(true);
-      setMyProfile(foundUser);
-      navigate("/");
-    } else {
-      console.log("error");
+    try {
+      const q = query(
+        collection(db, "users"),
+        where("email", "==", user.email)
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const foundUser = querySnapshot.docs[0].data();
+
+        if (foundUser.password === user.password) {
+          setIsSignedIn(true);
+          setMyProfile(foundUser);
+          navigate("/");
+        } else {
+          setError("password", {
+            type: "manual",
+            message: "Password is incorrect",
+          });
+        }
+      } else {
+        setError("email", { type: "manual", message: "Email is incorrect" });
+      }
+    } catch (error) {
+      console.error("Error retrieving user data: ", error);
     }
   }
 
@@ -44,7 +64,7 @@ export function SignInForm() {
               Email
             </label>
             {isSubmitted && errors.email && (
-              <span className='text-red-500'>Required</span>
+              <span className='text-red-500'>{errors.email.message}</span>
             )}
             <input
               {...register("email", {
@@ -58,9 +78,7 @@ export function SignInForm() {
                   : "border-gray-900"
               } focus:border-primary focus:outline-none `}
             />
-            {isSubmitted && errors.username && (
-              <span className='text-red-500'>Required</span>
-            )}
+
             <label htmlFor='password' className=' self-start'>
               Password
             </label>
@@ -78,7 +96,7 @@ export function SignInForm() {
               } focus:border-primary focus:outline-none `}
             />
             {isSubmitted && errors.password && (
-              <span className='text-red-500'>Required</span>
+              <span className='text-red-500'>{errors.password.message}</span>
             )}
             <div className='flex flex-col items-center mt-3'>
               {/* Make this p element into a link to the Sign-In page */}
