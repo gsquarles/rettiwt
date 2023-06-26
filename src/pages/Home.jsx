@@ -1,5 +1,6 @@
 import { FaEarlybirds, FaSearch, FaHome } from "react-icons/fa";
 import { SlSettings } from "react-icons/sl";
+import { IoMdPerson } from "react-icons/io";
 import { TweetBtn } from "../components/TweetBtn";
 import { TweetCard } from "../components/TweetCard";
 import { Link, useNavigate } from "react-router-dom";
@@ -57,6 +58,13 @@ export function Home() {
             <div className='flex justify-evenly items-center w-3/5 py-2 ml-16 mb-5 cursor-pointer hover:bg-slate-300 hover:rounded-full hover:py-2'>
               <FaSearch className='text-3xl ' />
               <span className='text-2xl font-medium '>Explore</span>
+            </div>
+            <div
+              className='flex justify-evenly items-center w-3/5 py-2 ml-16 mb-5 cursor-pointer hover:bg-slate-300 hover:rounded-full hover:py-2'
+              onClick={() => navigate("/profile")}
+            >
+              <IoMdPerson className='text-3xl ' />
+              <span className='text-2xl font-medium '>Profile</span>
             </div>
             <div
               className='flex justify-center items-center'
